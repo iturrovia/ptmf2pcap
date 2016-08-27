@@ -28,7 +28,7 @@ public abstract class Ui {
 
 	/** Change these settings before running this class. */
 	private static final boolean DEBUG_MODE = false;
-	public static final String BUILD = "0.9.4.build20160819";
+	public static final String BUILD = "0.9.5.build20160827";
 	
 	/**
 	 * Handles Text Output Event

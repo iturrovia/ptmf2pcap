@@ -164,6 +164,7 @@ public class PtmfFile {
 	 */
 	public ArrayList<PtmfFrame> getPtmfFrameArrayList() {
 		ArrayList<PtmfFrame> ptmfFrameArrayList = null;
+		PtmfFrame ptmfFrame = null;
 		ArrayList<byte[]> byteFrameArrayList = ByteUtils.split(this.getByteContent(), FRAME_SEPARATOR_BYTES);
 		byteFrameArrayList.remove(0); // We remove first element of the ArrayList, which is a the PTMF file header not a PTMF frame
 		Pcap.resetTcpSeqNums();
@@ -171,19 +172,35 @@ public class PtmfFile {
 		ptmfFrameArrayList = new ArrayList<PtmfFrame>();
 		if(this.getFileType().equals(FILETYPE_USERINTERFACE)) {
 			for(int index = 0; index < byteFrameArrayList.size(); index++) {
-				ptmfFrameArrayList.add(new UserInterfacePtmfFrame(byteFrameArrayList.get(index), index));
+				ptmfFrame = new UserInterfacePtmfFrame(byteFrameArrayList.get(index), index);
+				if(!(ptmfFrame.isTooShort() && (index == (byteFrameArrayList.size() - 1)))) {
+					// We are only adding the PtmfFrame object if we are sure that it is not a "bogus" frame placed at the end of the file
+					ptmfFrameArrayList.add(ptmfFrame);
+				};
 			};
 		} else if (this.getFileType().equals(FILETYPE_SIP)) {
 			for(int index = 0; index < byteFrameArrayList.size(); index++) {
-				ptmfFrameArrayList.add(new SipPtmfFrame(byteFrameArrayList.get(index), index));
+				ptmfFrame = new SipPtmfFrame(byteFrameArrayList.get(index), index);
+				if(!(ptmfFrame.isTooShort() && (index == (byteFrameArrayList.size() - 1)))) {
+					// We are only adding the PtmfFrame object if we are sure that it is not a "bogus" frame placed at the end of the file
+					ptmfFrameArrayList.add(ptmfFrame);
+				};
 			};
 		} else if (this.getFileType().equals(FILETYPE_DIAMETER)) {
 			for(int index = 0; index < byteFrameArrayList.size(); index++) {
-				ptmfFrameArrayList.add(new DiameterPtmfFrame(byteFrameArrayList.get(index), index));
+				ptmfFrame = new DiameterPtmfFrame(byteFrameArrayList.get(index), index);
+				if(!(ptmfFrame.isTooShort() && (index == (byteFrameArrayList.size() - 1)))) {
+					// We are only adding the PtmfFrame object if we are sure that it is not a "bogus" frame placed at the end of the file
+					ptmfFrameArrayList.add(ptmfFrame);
+				};
 			};
 		} else if (this.getFileType().equals(FILETYPE_IP)) {
 			for(int index = 0; index < byteFrameArrayList.size(); index++) {
-				ptmfFrameArrayList.add(new IpPtmfFrame(byteFrameArrayList.get(index), index));
+				ptmfFrame = new IpPtmfFrame(byteFrameArrayList.get(index), index);
+				if(!(ptmfFrame.isTooShort() && (index == (byteFrameArrayList.size() - 1)))) {
+					// We are only adding the PtmfFrame object if we are sure that it is not a "bogus" frame placed at the end of the file
+					ptmfFrameArrayList.add(ptmfFrame);
+				};
 			};
 		} else {
 			System.out.println("Error: fileType=" + this.getFileType() + " not recognized"); 

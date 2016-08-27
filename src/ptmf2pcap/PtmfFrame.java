@@ -475,4 +475,23 @@ public abstract class PtmfFrame {
 		return date;
 	};
 	
+	/**
+	 * This method checks whether the byte content of a PtmfFrame is
+	 * too short for an actual frame of its type
+	 * 
+	 * I'm introducing this method since we've found that recently
+	 * upgraded SBCs are including some new content at the end of the
+	 * PTMF file (so ptmf2pcap would try to parse it as another frame).
+	 * This method is helpful to detect when this happens
+	 * 
+	 * @return	Whether the byte content is too short
+	 */
+	public boolean isTooShort() {
+		boolean result = false;
+		if(this.getByteContent().length < this.GET_FRAME_HEADER_LENGTH()) {
+			result = true;
+		}
+		return result;
+	};
+	
 };
