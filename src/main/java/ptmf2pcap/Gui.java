@@ -1,5 +1,4 @@
 package ptmf2pcap;
-import java.util.ArrayList;
 import java.awt.Frame;
 import java.awt.TextArea;
 import java.awt.GridLayout;
@@ -93,7 +92,7 @@ public class Gui extends Ui {
 	 */
 	public static void main(String[] args) {
 		Gui gui = new Gui();
-		gui.processInputOutputArrayList(Gui.getInputOutputArrayListFromDirPaths(".", "."));
+		gui.processInputOutputList(Gui.getInputOutputListFromDirPaths(".", "."));
 	}
 	
 }

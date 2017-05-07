@@ -1,4 +1,5 @@
 package ptmf2pcap;
+import java.util.List;
 import java.util.ArrayList;
 
 /*
@@ -26,20 +27,17 @@ public class ByteUtils {
 	/**
 	 * Joins all the byte arrays from an input ArrayList
 	 *
-	 * @param	bytesArrayList	a ArrayList containing byte arrays 
+	 * @param	bytesList	a List containing byte arrays 
 	 * @return	a byte array containing the concatenation of all the byte arrays from the input ArrayList
 	 */
-	public static byte[] join(ArrayList<byte[]> bytesArrayList) {
-		byte[] bytes;
+	public static byte[] join(Iterable<byte[]> bytesIterable) {
 		int outputLength = 0;
-		for(int i = 0; i < bytesArrayList.size(); i++) {
-			bytes = bytesArrayList.get(i);
+		for(byte[] bytes: bytesIterable) {
 			outputLength = outputLength + bytes.length;
 		}
 		byte[] outputByteArray = new byte[outputLength];
 		outputLength = 0;
-		for(int i = 0; i < bytesArrayList.size(); i++) {
-			bytes = bytesArrayList.get(i);
+		for(byte[] bytes: bytesIterable) {
 			System.arraycopy(bytes, 0, outputByteArray, outputLength, bytes.length);
 			outputLength = outputLength + bytes.length;
 		}

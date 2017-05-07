@@ -1,6 +1,5 @@
 Main-Class: ptmf2pcap.Gui
-Name: ptmf2pcap/
 Specification-Title: ptmf2pcap
-Specification-Version: 0.9.4
+Specification-Version: 0.9.5
 Implementation-Title: ptmf2pcap 
-Implementation-Version: build20160819
+Implementation-Version: build20170505

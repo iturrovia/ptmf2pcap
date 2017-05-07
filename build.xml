@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<project name="ptmf2pcap" default="main" basedir=".">
+	<property name="src.dir" location="src/main/java"/>
+	<property name="build.dir" location="bin"/>
+	<property name="dist.dir" location="dist"/>
+	<property name="manifest.file" location="src/main/resources/Manifest.txt"/>
+	<target name="clean"><delete dir="${build.dir}"/><delete dir="${dist.dir}"/></target>
+	<target name="makedir"><mkdir dir="${build.dir}"/><mkdir dir="${dist.dir}"/></target>
+	<target name="compile" depends="clean, makedir"><javac srcdir="${src.dir}" destdir="${build.dir}"></javac></target>
+	<target name="jar" depends="compile">
+		<jar destfile="${dist.dir}\ptmf2pcap.jar" basedir="${build.dir}" manifest="${manifest.file}"></jar>
+	</target>
+	<target name="main" depends="compile, jar"><description>Main target</description></target>
+</project>

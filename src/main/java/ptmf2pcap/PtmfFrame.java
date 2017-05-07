@@ -422,7 +422,7 @@ public abstract class PtmfFrame {
 		byte[] ethPacket = null;
 		byte[] ipv4Packet = this.getIpv4Packet();
 		if(ipv4Packet != null) {
-			ethPacket = Pcap.createEthernetPacket(DEFAULT_MAC, DEFAULT_MAC, Pcap.ETHERTYPE_IPV4, ipv4Packet);
+			ethPacket = Pcap.createEthernetPacket(DEFAULT_MAC, DEFAULT_MAC, Pcap.ETHERTYPE_IPV4, ipv4Packet, -1);
 		};
 		return ethPacket;
 	};

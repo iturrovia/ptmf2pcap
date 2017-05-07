@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.ArrayList;
 
 /**
@@ -28,7 +29,7 @@ public abstract class Ui {
 
 	/** Change these settings before running this class. */
 	private static final boolean DEBUG_MODE = false;
-	public static final String BUILD = "0.9.5.build20160827";
+	public static final String BUILD = "0.9.5.build20170505";
 	
 	/**
 	 * Handles Text Output Event
@@ -113,18 +114,18 @@ public abstract class Ui {
 	 * @param	dirPath	path to the directory containing the PTMF files
 	 * @return			the PTMF files found in the directory
 	 */
-	public static ArrayList<File> findPtmfFilesInDir(String dirPath) {
+	public static List<File> findPtmfFilesInDir(String dirPath) {
 		File dir = new File(dirPath);
-		File[] filesList = dir.listFiles();
-		ArrayList<File> ptmfFileArrayList = new ArrayList<File>();
-		for(File f : filesList){
+		File[] files = dir.listFiles();
+		List<File> ptmfFileList = new ArrayList<File>();
+		for(File f : files){
 			if(f.isFile()){
 				if(f.getName().toUpperCase().endsWith(".PTMF")) {
-					ptmfFileArrayList.add(f);
+					ptmfFileList.add(f);
 				}
 			}
 		}
-		return ptmfFileArrayList;
+		return ptmfFileList;
     };
 	
 	public static File[] getInputOutputFromFilePaths(String inputFilePath, String outputFilePath) {
@@ -134,24 +135,23 @@ public abstract class Ui {
 		return inputOutput;
 	};
 	
-	public static ArrayList<File[]> getInputOutputArrayListFromDirPaths(String inputDirPath, String outputDirPath) {
-		ArrayList<File[]> inputOutputArrayList = new ArrayList<File[]>();
-		ArrayList<File> inputArrayList = findPtmfFilesInDir(inputDirPath);
+	public static List<File[]> getInputOutputListFromDirPaths(String inputDirPath, String outputDirPath) {
+		List<File[]> inputOutputList = new ArrayList<File[]>();
 		String inputFileName = null;
 		String inputFilePath = null;
 		String outputFileName = null;
 		String outputFilePath = null;
-		for(int i = 0; i < inputArrayList.size(); i++) {
-			inputFilePath = inputArrayList.get(i).getPath();
-			inputFileName = inputArrayList.get(i).getName();
+		for(File inputFile: findPtmfFilesInDir(inputDirPath)) {
+			inputFileName = inputFile.getName();
+			inputFilePath = inputFile.getPath();
 			outputFileName = inputFileName.substring(0, inputFileName.length() - 5) + ".pcap";
 			outputFilePath = (new File(outputDirPath, outputFileName)).getPath();
-			inputOutputArrayList.add(getInputOutputFromFilePaths(inputFilePath, outputFilePath));
+			inputOutputList.add(getInputOutputFromFilePaths(inputFilePath, outputFilePath));
 		}
-		return inputOutputArrayList;
+		return inputOutputList;
 	};
 	
-	public void processInputOutputArrayList(ArrayList<File[]> inputOutputArrayList) {
+	public void processInputOutputList(List<File[]> inputOutputList) {
 		File inputFile = null;
 		File outputFile = null;
 		byte[] pcapFile = null;
@@ -163,10 +163,11 @@ public abstract class Ui {
 		
 		this.onTextOutput("ptmf2pcap.v" + BUILD);
 		this.onTextOutput("================================================================");
-		for(int i = 0; i < inputOutputArrayList.size(); i++) {
-			inputFile = inputOutputArrayList.get(i)[0];
-			outputFile = inputOutputArrayList.get(i)[1];
-			if(i > 0) {
+		int index = 0;
+		for(File[] inputOutput: inputOutputList) {
+			inputFile = inputOutput[0];
+			outputFile = inputOutput[1];
+			if(index > 0) {
 				this.onTextOutput("----------------------------------------------------------------");
 			}
 			this.onTextOutput("Input:  " + inputFile.getPath());
@@ -195,9 +196,10 @@ public abstract class Ui {
 				errorCounter++;
 			}
 			this.onTextOutput("Result: " + result);
+			index++;
 		}
 		this.onTextOutput("================================================================");
-		summary = "Processed " + Integer.toString(inputOutputArrayList.size()) + " files with " + Integer.toString(errorCounter) + " errors";
+		summary = "Processed " + Integer.toString(inputOutputList.size()) + " files with " + Integer.toString(errorCounter) + " errors";
 		this.onTextOutput(summary);
 		this.onFinish(errorCounter);
 	}

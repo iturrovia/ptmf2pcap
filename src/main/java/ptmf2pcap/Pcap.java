@@ -1,5 +1,6 @@
 package ptmf2pcap;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.net.InetAddress;
 import java.util.HashMap;
@@ -158,13 +159,12 @@ public class Pcap {
 	}
 	
 	/**
-	 * Returns a PCAP file containing all the PCAP frames provided in the input ArrayList
+	 * Returns a PCAP file header corresponding to the provided link type
 	 *
-	 * @param	pcapFrameArrayList	the frames to be included in the PCAP file
 	 * @param	linkType			the link type
-	 * @return						the PCAP file
+	 * @return						the PCAP file header
 	 */
-	public static byte[] createPcapFile(ArrayList<byte[]> pcapFrameArrayList, int linkType) {
+	public static byte[] createPcapFileHeader(int linkType) {
 		ArrayList<byte[]> bytesArrayList = new ArrayList<byte[]>();
 		bytesArrayList.add(PCAP_HEADER_FILE_SIGNATURE);
 		bytesArrayList.add(PCAP_HEADER_VERSION);
@@ -172,8 +172,21 @@ public class Pcap {
 		bytesArrayList.add(PCAP_HEADER_TIMESTAMP_ACCURACY);
 		bytesArrayList.add(PCAP_HEADER_SNAPSHOT_LENGTH);
 		bytesArrayList.add(ByteUtils.intToByteArray(linkType, 4, true));
-		for(int index = 0; index < pcapFrameArrayList.size(); index++) {
-			bytesArrayList.add(pcapFrameArrayList.get(index));
+		return ByteUtils.join(bytesArrayList);
+	};
+
+	/**
+	 * Returns a PCAP file containing all the PCAP frames provided in the input ArrayList
+	 *
+	 * @param	pcapFrameArrayList	the frames to be included in the PCAP file
+	 * @param	linkType			the link type
+	 * @return						the PCAP file
+	 */
+	public static byte[] createPcapFile(List<byte[]> pcapFrameList, int linkType) {
+		ArrayList<byte[]> bytesArrayList = new ArrayList<byte[]>();
+		bytesArrayList.add(createPcapFileHeader(linkType));
+		for(byte[] pcapFrame: pcapFrameList) {
+			bytesArrayList.add(pcapFrame);
 		};
 		return ByteUtils.join(bytesArrayList);
 	};
@@ -204,12 +217,18 @@ public class Pcap {
 	 * @param	dstMac		the destination MAC address
 	 * @param	protocol	the protocol of the body to be included in the Ethernet packet
 	 * @param	body		the body to be included in the Ethernet packet
+	 * @param	vid			the vlan ID to be used in VLAN tag in Ethernet packet (will take value=-1 in case of no VLAN tag)
 	 * @return				the Ethernet packet
 	 */
-	public static byte[] createEthernetPacket(byte[] srcMac, byte[] dstMac, byte[] protocol, byte[] body) {
+	public static byte[] createEthernetPacket(byte[] srcMac, byte[] dstMac, byte[] protocol, byte[] body, int vid) {
 		ArrayList<byte[]> bytesArrayList = new ArrayList<byte[]>();
 		bytesArrayList.add(srcMac);		// source MAC
 		bytesArrayList.add(dstMac);		// destination MAC
+		if(vid > -1) {
+			byte[] TPID_8021Q = { (byte) 0x81, (byte) 0x00 };
+			bytesArrayList.add(TPID_8021Q); // TPID
+			bytesArrayList.add(ByteUtils.intToByteArray(vid, 2, false)); // TCI (with PCP=0, DEI=0, VID=vid)
+		}
 		bytesArrayList.add(protocol);	// protocol
 		bytesArrayList.add(body);		// the body itself
 		return ByteUtils.join(bytesArrayList);

@@ -1,5 +1,6 @@
 package ptmf2pcap;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.lang.StringBuilder;
 import java.util.logging.Logger;
@@ -110,7 +111,7 @@ public class PtmfFile {
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append(ByteUtils.bytesToHexString(this.getHeader()));
-		ArrayList<PtmfFrame> ptmfFrameArrayList = this.getPtmfFrameArrayList();
+		List<PtmfFrame> ptmfFrameArrayList = this.getPtmfFrameList();
 		if(ptmfFrameArrayList != null) {
 			for (int index = 0; index < ptmfFrameArrayList.size(); index++) {
 				stringBuilder.append('\r');
@@ -118,12 +119,12 @@ public class PtmfFile {
 				stringBuilder.append(ptmfFrameArrayList.get(index).toString());
 			};
 		} else {
-			ArrayList<byte[]> byteFrameArrayList = ByteUtils.split(this.getByteContent(), FRAME_SEPARATOR_BYTES);
-			stringBuilder.append(ByteUtils.bytesToHexString(byteFrameArrayList.get(0)));
-			for(int i = 1; i < byteFrameArrayList.size(); i++) {
+			ArrayList<byte[]> byteFrameList = ByteUtils.split(this.getByteContent(), FRAME_SEPARATOR_BYTES);
+			stringBuilder.append(ByteUtils.bytesToHexString(byteFrameList.get(0)));
+			for(int i = 1; i < byteFrameList.size(); i++) {
 				stringBuilder.append('\r');
 				stringBuilder.append('\n');
-				stringBuilder.append(ByteUtils.bytesToHexString(byteFrameArrayList.get(i)));
+				stringBuilder.append(ByteUtils.bytesToHexString(byteFrameList.get(i)));
 			};
 		};
 		return stringBuilder.toString();
@@ -157,56 +158,79 @@ public class PtmfFile {
 	};
 	
 	/**
+	 * Checks whether the input fileType is supported or not
+	 *
+	 * @param	fileType	the fileType
+	 * @return				whether it is supported or not
+	 */
+	public static boolean isSupportedFileType(String fileType) {
+		if(fileType.equals(FILETYPE_USERINTERFACE) || fileType.equals(FILETYPE_SIP) || fileType.equals(FILETYPE_DIAMETER) || fileType.equals(FILETYPE_IP)) {
+			return true;
+		} else {
+			return false;
+		}
+	};
+
+	/**
+	 * Creates a PtmfFrame object using a different constructor depending on the fileType
+	 * If the fileType is not recongized it returns null
+	 *
+	 * @param	byteFrame	the input bytes
+	 * @param	frameIndex	the frame index
+	 * @param	fileType	the fileType
+	 * @return	the ptmfFrame
+	 */
+	public static PtmfFrame createPtmfFrame(byte[] byteFrame, int frameIndex, String fileType) {
+		PtmfFrame ptmfFrame = null;
+		if(fileType.equals(FILETYPE_USERINTERFACE)) {
+			ptmfFrame = new UserInterfacePtmfFrame(byteFrame, frameIndex);
+		} else if(fileType.equals(FILETYPE_SIP)) {
+			ptmfFrame = new SipPtmfFrame(byteFrame, frameIndex);
+		} else if(fileType.equals(FILETYPE_DIAMETER)) {
+			ptmfFrame = new DiameterPtmfFrame(byteFrame, frameIndex);
+		} else if(fileType.equals(FILETYPE_IP)) {
+			ptmfFrame = new IpPtmfFrame(byteFrame, frameIndex);
+		} else {
+			ptmfFrame = null;
+		};
+		return ptmfFrame;
+	}
+
+	/**
 	 * Returns all the PTMF frames that the PtmfFile contains
 	 * The PTMF frames are returned as an ArrayList of PtmfFrame objects
 	 *
 	 * @return	The PtmfFrame ArrayList
 	 */
-	public ArrayList<PtmfFrame> getPtmfFrameArrayList() {
-		ArrayList<PtmfFrame> ptmfFrameArrayList = null;
+	public List<PtmfFrame> getPtmfFrameList() {
+		if(!isSupportedFileType(this.getFileType())) {
+			// Really ugly handling, but I'm not changing it now as I'm planning to redesign the whole application someday
+			System.out.println("Error: fileType=" + this.getFileType() + " not recognized");
+			return null;
+		};
+
+		List<PtmfFrame> ptmfFrameList = null;
 		PtmfFrame ptmfFrame = null;
-		ArrayList<byte[]> byteFrameArrayList = ByteUtils.split(this.getByteContent(), FRAME_SEPARATOR_BYTES);
-		byteFrameArrayList.remove(0); // We remove first element of the ArrayList, which is a the PTMF file header not a PTMF frame
+		List<byte[]> byteFrameList = ByteUtils.split(this.getByteContent(), FRAME_SEPARATOR_BYTES);
+		byteFrameList.remove(0); // We remove first element of the ArrayList, which is a the PTMF file header not a PTMF frame
 		Pcap.resetTcpSeqNums();
 		Pcap.resetSctpSeqNums();
-		ptmfFrameArrayList = new ArrayList<PtmfFrame>();
-		if(this.getFileType().equals(FILETYPE_USERINTERFACE)) {
-			for(int index = 0; index < byteFrameArrayList.size(); index++) {
-				ptmfFrame = new UserInterfacePtmfFrame(byteFrameArrayList.get(index), index);
-				if(!(ptmfFrame.isTooShort() && (index == (byteFrameArrayList.size() - 1)))) {
-					// We are only adding the PtmfFrame object if we are sure that it is not a "bogus" frame placed at the end of the file
-					ptmfFrameArrayList.add(ptmfFrame);
-				};
+		ptmfFrameList = new ArrayList<PtmfFrame>();
+		int frameIndex = 0;
+		int frameListSize = byteFrameList.size();
+		String fileType = this.getFileType();
+		for(byte[] byteFrame: byteFrameList) {
+			ptmfFrame = createPtmfFrame(byteFrame, frameIndex, fileType);
+			if(!(ptmfFrame.isTooShort() && (frameIndex == (frameListSize - 1)))) {
+				// We are only adding the PtmfFrame object if we are sure that it is not a "bogus" frame placed at the end of the file
+				ptmfFrameList.add(ptmfFrame);
 			};
-		} else if (this.getFileType().equals(FILETYPE_SIP)) {
-			for(int index = 0; index < byteFrameArrayList.size(); index++) {
-				ptmfFrame = new SipPtmfFrame(byteFrameArrayList.get(index), index);
-				if(!(ptmfFrame.isTooShort() && (index == (byteFrameArrayList.size() - 1)))) {
-					// We are only adding the PtmfFrame object if we are sure that it is not a "bogus" frame placed at the end of the file
-					ptmfFrameArrayList.add(ptmfFrame);
-				};
-			};
-		} else if (this.getFileType().equals(FILETYPE_DIAMETER)) {
-			for(int index = 0; index < byteFrameArrayList.size(); index++) {
-				ptmfFrame = new DiameterPtmfFrame(byteFrameArrayList.get(index), index);
-				if(!(ptmfFrame.isTooShort() && (index == (byteFrameArrayList.size() - 1)))) {
-					// We are only adding the PtmfFrame object if we are sure that it is not a "bogus" frame placed at the end of the file
-					ptmfFrameArrayList.add(ptmfFrame);
-				};
-			};
-		} else if (this.getFileType().equals(FILETYPE_IP)) {
-			for(int index = 0; index < byteFrameArrayList.size(); index++) {
-				ptmfFrame = new IpPtmfFrame(byteFrameArrayList.get(index), index);
-				if(!(ptmfFrame.isTooShort() && (index == (byteFrameArrayList.size() - 1)))) {
-					// We are only adding the PtmfFrame object if we are sure that it is not a "bogus" frame placed at the end of the file
-					ptmfFrameArrayList.add(ptmfFrame);
-				};
-			};
-		} else {
-			System.out.println("Error: fileType=" + this.getFileType() + " not recognized"); 
-			ptmfFrameArrayList = null;
+			frameIndex++;
+			if(frameIndex >= frameListSize) {
+				break;
+			}
 		};
-		return ptmfFrameArrayList;
+		return ptmfFrameList;
 	};
 	
 	/**
@@ -215,17 +239,15 @@ public class PtmfFile {
 	 * @return	The PCAP file
 	 */
 	public byte[] getPcapFile() {
-		ArrayList<byte[]> pcapFrameArrayList = new ArrayList<byte[]>();
-		ArrayList<PtmfFrame> ptmfFrameArrayList = this.getPtmfFrameArrayList();
-		PtmfFrame ptmfFrame = null;
+		List<byte[]> pcapFrameList = new ArrayList<byte[]>();
+		List<PtmfFrame> ptmfFrameList = this.getPtmfFrameList();
 		byte[] pcapFrame;
-		for (int index = 0; index < ptmfFrameArrayList.size(); index++) {
-			ptmfFrame = ptmfFrameArrayList.get(index);
+		for (PtmfFrame ptmfFrame: ptmfFrameList) {
 			pcapFrame = ptmfFrame.getPcapFrame();
 			if(pcapFrame != null) {
-				pcapFrameArrayList.add(pcapFrame);
+				pcapFrameList.add(pcapFrame);
 			};
 		};
-		return Pcap.createPcapFile(pcapFrameArrayList, Pcap.LINKTYPE_ETHERNET);
+		return Pcap.createPcapFile(pcapFrameList, Pcap.LINKTYPE_ETHERNET);
 	}
 };

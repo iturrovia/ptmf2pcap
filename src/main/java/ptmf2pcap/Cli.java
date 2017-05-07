@@ -1,4 +1,5 @@
 package ptmf2pcap;
+import java.util.List;
 import java.util.ArrayList;
 import java.io.File;
 
@@ -63,15 +64,13 @@ public class Cli extends Ui {
 		"\r\n" +
 		"    ptmf2pcap -d <input_directory> <output_directory>" + "\r\n";
 		
-		ArrayList<File[]> inputOutputArrayList = null;
-		ArrayList<String> ptmfFilePathArrayList = null;
+		List<File[]> inputOutputList = null;
 		String inputFilePath = null;
 		String outputFilePath = null;
 		String inputDirPath = null;
 		String outputDirPath = null;
 		byte[] pcapFile = null;
 		byte[] fileContents = null;
-		PtmfFile ptmfFile = null;
 		String option = null;
 		Cli cli = new Cli();
 		
@@ -87,22 +86,22 @@ public class Cli extends Ui {
 			} else if((option.equals("-f")) && (args.length == 3)) {
 				inputFilePath = args[1];
 				outputFilePath = args[2];
-				inputOutputArrayList = new ArrayList<File[]>();
-				inputOutputArrayList.add(Cli.getInputOutputFromFilePaths(inputFilePath, outputFilePath));
+				inputOutputList = new ArrayList<File[]>();
+				inputOutputList.add(Cli.getInputOutputFromFilePaths(inputFilePath, outputFilePath));
 			} else if((option.equals("-d")) && (args.length == 3)) {
 				inputDirPath = args[1];
 				outputDirPath = args[2];
-				inputOutputArrayList = Cli.getInputOutputArrayListFromDirPaths(inputDirPath, outputDirPath);
+				inputOutputList = Cli.getInputOutputListFromDirPaths(inputDirPath, outputDirPath);
 			} else {
 				cli.consoleOutput(HELP_STRING);
 				cli.retValue = 1;
 			};
 		} else {
-			inputOutputArrayList = Cli.getInputOutputArrayListFromDirPaths(".", ".");
+			inputOutputList = Cli.getInputOutputListFromDirPaths(".", ".");
 		};
 		if(cli.retValue == 0) {
 			// We can proceed
-			cli.processInputOutputArrayList(inputOutputArrayList);
+			cli.processInputOutputList(inputOutputList);
 		}
 		System.exit(cli.retValue);
 	}
