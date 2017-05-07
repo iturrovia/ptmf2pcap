@@ -7,6 +7,8 @@
 
 ## How to use ptmf2pcap?
 
+First of all, get ptmf2pcap.jar and ptmf2pcap.bat from https://github.com/fran-ovia/ptmf2pcap/releases
+
 There are two ways of using it:
 
 **A. Just double-clicking on ptmf2pcap.jar file:**
