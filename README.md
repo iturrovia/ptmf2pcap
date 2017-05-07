@@ -1,4 +1,5 @@
 ## Converting Huawei PTMF trace files to Wireshark PCAP files
+[![Build Status](https://travis-ci.org/fran-ovia/ptmf2pcap.svg?branch=master)](https://travis-ci.org/fran-ovia/ptmf2pcap)
 
 1. It is a simple application to convert Huawei PTMF files to Wireshark PCAP files.
 2. No special requirement! Just Java Runtime Environment installed in your PC.
